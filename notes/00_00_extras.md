@@ -106,3 +106,74 @@ Why do this?
 - Mean returns are notoriously difficult to estimate accurately, especially over short periods
 - The estimation error in mean can significantly impact volatility estimates
 - For short-term volatility estimation, assuming zero mean often provides more stable estimates
+
+# Mean Notional Exposure
+Let's define our variables:
+* $P_t$ = Daily closing price at time $t$
+* $Q_t$ = Position size (quantity) at time $t$
+* $n$ = Number of days in the observation period
+* $\text{NE}_t$ = Notional Exposure at time $t$
+
+The notional exposure for any given day is:
+$$\text{NE}_t = P_t \times Q_t$$
+
+The mean notional exposure over the period is:
+$$\text{Mean Notional Exposure} = \frac{1}{n}\sum_{t=1}^{n} \text{NE}_t$$
+
+Substituting the notional exposure formula:
+$$\text{Mean Notional Exposure} = \frac{1}{n}\sum_{t=1}^{n} (P_t \times Q_t)$$
+
+If the position size remains constant over the period (let's call it Q), the formula simplifies to:
+$$\text{Mean Notional Exposure} = Q \times \frac{1}{n}\sum_{t=1}^{n} P_t$$
+
+# Turnover Notional Exposure
+
+"Turnover" in this context refers to how much your position's exposure (in notional terms) changes relative to its average size. It measures the rate at which you're changing your positions.
+
+1) First, let's define our variables:
+* $P_t$ = Daily closing price at time $t$
+* $Q_t$ = Position size at time $t$
+* $\text{NE}_t$ = Notional Exposure at time $t$ = $P_t \times Q_t$
+* $n$ = Number of days in the observation period
+
+2) The daily exposure change (absolute) is:
+$$|\Delta \text{NE}_t| = |\text{NE}_t - \text{NE}_{t-1}|$$
+
+3) The mean absolute daily exposure change is:
+$$\text{Mean}|\Delta \text{NE}| = \frac{1}{n-1}\sum_{t=2}^{n} |\text{NE}_t - \text{NE}_{t-1}|$$
+
+4) The mean exposure is:
+$$\text{Mean NE} = \frac{1}{n}\sum_{t=1}^{n} \text{NE}_t$$
+
+5) To annualize the mean absolute daily change, multiply by $252$ (assuming 252 trading days):
+$$\text{Annualized Mean}|\Delta \text{NE}| = 252 \times \text{Mean}|\Delta \text{NE}|$$
+
+6) Finally, the turnover notional exposure is:
+$$\text{Turnover Notional Exposure} = \frac{252 \times \frac{1}{n-1}\sum_{t=2}^{n} |\text{NE}_t - \text{NE}_{t-1}|}{2 \times \frac{1}{n}\sum_{t=1}^{n} \text{NE}_t}$$
+
+This can be simplified to:
+$$\text{Turnover Notional Exposure} = \frac{252 \times n \times \sum_{t=2}^{n} |\text{NE}_t - \text{NE}_{t-1}|}{2(n-1) \times \sum_{t=1}^{n} \text{NE}_t}$$
+
+**Why $\times 2$ in denominator**
+
+
+1. The absolute daily exposure change captures both increases and decreases in position size. When you increase a position from 100 to 150, the absolute change is 50. When you decrease it from 150 back to 100, that's another absolute change of 50.
+
+2. However, in terms of actual position turnover, this round-trip trade really only "turned over" a position size of 50, not 100 (which is what you'd get if you just summed the absolute changes).
+
+3. By dividing by 2, we correct for this double-counting effect. It normalizes the metric to represent the actual amount of position change relative to the average position size.
+
+Think of it like this: If you start with $100, buy another $50 (going to $150), then sell $50 (back to $100):
+- Sum of absolute changes = $50 + $50 = $100
+- Actual turnover = $50 (the amount that was actually "turned over")
+- Using 2x mean exposure in denominator gives us a more accurate representation of how much of the position was actually traded relative to its size
+
+Without the factor of 2, we would be overstating the turnover rate by counting each round-trip trade twice.
+
+
+**Interpretation**
+
+* How much of your position you're "turning over" or changing annually
+* A turnover of 1 (or 100%) would mean you're effectively changing your entire position once per year
+* Higher values indicate more active trading/position changes
+Lower values indicate more static positions
